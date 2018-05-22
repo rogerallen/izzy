@@ -1,17 +1,15 @@
 CC	= cc
-LINT   = lint
 OPT    = -g
 #OPT    = -O
-CFLAGS = -c $(OPT) -I/usr/include/X11/motif 
-LFLAGS = $(OPT) -L/usr/lib/X11/lib 
-LINTFLAGS = -I/usr/include/X11/motif
-#LIBS = -lXm -lXtm -lX11 
+CFLAGS = -Wall -c $(OPT) -I/usr/include/X11/motif
+LFLAGS = $(OPT) -L/usr/lib/X11/lib
+#LIBS = -lXm -lXtm -lX11
 #LIBS = -Bstatic -lXm -Bdynamic -lXt -lX11
-LIBS = -lXm -lXt -lX11 
+LIBS = -lXm -lXt -lX11
 
 # for DEFINES -
 # define the defines used here
-DEFINES = 	-DANSI 
+DEFINES = 	-DANSI
 
 OBJECTS =	imain.o		iinit.o		xs_wprintf.o \
 		iparse.o	ialarm.o
@@ -35,10 +33,6 @@ installcd1 :
 	cp izzy /usr/local/cd1/bin/izzy
 	cp man1/izzy.1 /usr/local/cd1/man/man1/izzy.1
 
-lint :
-	$(LINT) $(LINTFLAGS) $(DEFINES) $(CFILES) > lint.out
-	vi lint.out
-
 clean :
 	rm $(OBJECTS) izzy
 
@@ -54,7 +48,7 @@ iparse.o : iparse.c $(HFILES)
 ialarm.o : ialarm.c $(HFILES)
 	$(CC) $(CFLAGS) $(DEFINES) ialarm.c
 
-xs_wprintf.o 	: xs_wprintf.c 
+xs_wprintf.o 	: xs_wprintf.c
 	$(CC) $(CFLAGS) $(DEFINES) xs_wprintf.c
 tar:
 	tar cf izzy.tar $(CFILES) $(HFILES) Makefile man1/izzy.1

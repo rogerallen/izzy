@@ -1,11 +1,27 @@
 /***********************************************************************
- * 
+ *
  * ialarm.c
- * 
+ *
  * Alarm Routines for Izzy
  *
  ***********************************************************************/
+#include <X11/Intrinsic.h>
+#include <X11/StringDefs.h>
+#include <Xm/DrawingA.h>
+#include <Xm/Form.h>
+#include <Xm/Label.h>
+#include <Xm/PushB.h>
+#include <Xm/RowColumn.h>
+#include <Xm/Text.h>
+#include <Xm/Xm.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+#include "izzy.h"
 #include "ialarm.h"
+
+extern AlarmType	theAlarm[MAX_ALARMS];
+extern int		curAlarm;
 
 void Alarm(n, id)
    int n;
@@ -37,7 +53,7 @@ void ScheduleAlarm(n, id)
 		tmp,
 		alarm_time;
    char         tmpStr[4];
-   int          re_schedule; 
+   int          re_schedule;
 
    time(&tloc);
    re_schedule = FALSE;
@@ -118,7 +134,7 @@ long AlarmToday(n, tloc, re_schedule)
           alarm_time;
 
    /*
-    * set up alarmTime to be the time of the alarm in seconds    
+    * set up alarmTime to be the time of the alarm in seconds
     */
    alarmTime = GetAlarmTime(n);
    /*
@@ -127,9 +143,9 @@ long AlarmToday(n, tloc, re_schedule)
    curTime = GetCurTime(tloc);
 
    if(alarmTime > curTime) {
-      alarm_time = ((alarmTime + (86400 - (curTime % 86400))) % 
+      alarm_time = ((alarmTime + (86400 - (curTime % 86400))) %
                      86400) * 1000;
-   } else { 
+   } else {
       /* schedule it to be scheduled at 00:00 */
       *re_schedule = TRUE;
       alarm_time = Time2Midnite(curTime);
@@ -144,7 +160,7 @@ long Time2Midnite(curTime)
 {
    long  alarmTime,
 	 tmp;
-   alarmTime = 24 * 3600; 
+   alarmTime = 24 * 3600;
    tmp = ((alarmTime + (86400 - (curTime % 86400))) % 86400) * 1000;
    return(tmp);
 }

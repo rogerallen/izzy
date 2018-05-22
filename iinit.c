@@ -5,8 +5,32 @@
  * Routines to initialize the Widgets, etc. for Izzy
  *
  ***********************************************************************/
+#include <X11/Intrinsic.h>
+#include <X11/StringDefs.h>
+#include <Xm/DrawingA.h>
+#include <Xm/Form.h>
+#include <Xm/Label.h>
+#include <Xm/PushB.h>
+#include <Xm/RowColumn.h>
+#include <Xm/Text.h>
+#include <Xm/Xm.h>
+#include "izzy.h"
 #include "iinit.h"
 #include "imain.h"
+#include "iparse.h"
+
+extern unsigned int    digitEncode[10];
+extern digitType       digit[4];
+extern char		segmentDir[7]; 	/* segment direction from its origin */
+extern XPoint		segmentOrg[7];	/* x,y coord of segment's origin */
+extern int		numAlarms;
+extern int		curAlarm;
+extern Widget        	toplevel,
+		background,	/* form widget background */
+		clockFace,	/* where digits are printed */
+		dateArea;	/* where date is printed */
+extern GC		drawGC,
+eraseGC;
 
 void InitWidgets()
 {
@@ -18,7 +42,7 @@ void InitWidgets()
    ";
 
    /*
-    * set up curAlarm = 0 
+    * set up curAlarm = 0
     */
    curAlarm = 0;
 
@@ -35,9 +59,9 @@ void InitWidgets()
     */
    n = 0;
    XtSetArg(args[n], XmNwidth, CLOCK_WIDTH); n++;
-   XtSetArg(args[n], XmNheight, 
+   XtSetArg(args[n], XmNheight,
 		CLOCK_HEIGHT + DATE_HEIGHT + ICON_AREA_HEIGHT); n++;
-   background = XtCreateManagedWidget("background", xmFormWidgetClass, 
+   background = XtCreateManagedWidget("background", xmFormWidgetClass,
 					toplevel, args, n);
 
    /*
@@ -76,7 +100,7 @@ void InitWidgets()
     */
    n = 0;
    XtSetArg(args[n], XmNmaxWidth, CLOCK_WIDTH); n++;
-   XtSetArg(args[n], XmNmaxHeight, 
+   XtSetArg(args[n], XmNmaxHeight,
 		CLOCK_HEIGHT + DATE_HEIGHT + ICON_AREA_HEIGHT); n++;
    XtSetArg(args[n], XmNminWidth, CLOCK_WIDTH); n++;
    XtSetArg(args[n], XmNminHeight, CLOCK_HEIGHT); n++;
@@ -88,24 +112,24 @@ void InitWidgets()
    numAlarms = 0;
    ParseAlarmFile();
 
-   /* 
-    * add expose event handler 
+   /*
+    * add expose event handler
 
 * will add resize callback here *
 
     */
-   XtAddCallback(clockFace, 
-		 (String) XmNexposeCallback, 
+   XtAddCallback(clockFace,
+		 (String) XmNexposeCallback,
 		 (XtCallbackProc) Update,
 		 (XtPointer) NULL
 		);
 
 }
 
-void InitDigits()  
+void InitDigits()
 {
 
-   /* 
+   /*
     * set up the encoding for the digits
     * see izzy.h for explanation
     */
@@ -121,7 +145,7 @@ void InitDigits()
    digitEncode[9] = 0x7b;
 
    /*
-    * set up the segment direction variable   
+    * set up the segment direction variable
     * h=horizontal v=vertical
     */
    segmentDir[0] = 'h';
@@ -151,14 +175,14 @@ void InitDigits()
    segmentOrg[6].y = 2*SEG_LENGTH;
 
    /*
-    * set up the origin of each digit   
+    * set up the origin of each digit
     */
    digit[0].origin.x = 3*SEG_WIDTH;
    digit[1].origin.x = 6*SEG_WIDTH + SEG_LENGTH;
    digit[2].origin.x = 10*SEG_WIDTH + 2*SEG_LENGTH;
    digit[3].origin.x = 14*SEG_WIDTH + 3*SEG_LENGTH;
    digit[0].origin.y = 2*SEG_WIDTH;
-   digit[1].origin.y = 2*SEG_WIDTH; 
+   digit[1].origin.y = 2*SEG_WIDTH;
    digit[2].origin.y = 2*SEG_WIDTH;
    digit[3].origin.y = 2*SEG_WIDTH;
 
@@ -167,7 +191,7 @@ void InitDigits()
 void InitTime()
 {
    /*
-    * add the timeout with an initial delay 
+    * add the timeout with an initial delay
     */
    XtAddTimeOut(INIT_DELAY, (XtTimerCallbackProc) DoTime, (XtPointer)NULL);
 
@@ -186,8 +210,8 @@ void InitGC()
    XtSetArg( args[n], XtNforeground, &values.foreground); n++;
    XtSetArg( args[n], XtNbackground, &values.background); n++;
    XtGetValues(clockFace, args, n);
-   drawGC = XCreateGC(XtDisplay(clockFace), XtWindow(clockFace), 
-		      GCForeground | GCBackground, 
+   drawGC = XCreateGC(XtDisplay(clockFace), XtWindow(clockFace),
+		      GCForeground | GCBackground,
 		      &values);
 
    /*
@@ -197,9 +221,8 @@ void InitGC()
    XtSetArg( args[n], XtNbackground, &values.foreground); n++;
    XtSetArg( args[n], XtNbackground, &values.background); n++;
    XtGetValues(clockFace, args, n);
-   eraseGC = XCreateGC(XtDisplay(clockFace), XtWindow(clockFace), 
-		      GCForeground | GCBackground, 
+   eraseGC = XCreateGC(XtDisplay(clockFace), XtWindow(clockFace),
+		      GCForeground | GCBackground,
 		      &values);
 
 }
-

@@ -12,10 +12,51 @@
  *---------------------------------------------------------------------
  *
  **********************************************************************/
+#include <X11/Intrinsic.h>
+#include <X11/StringDefs.h>
+#include <Xm/DrawingA.h>
+#include <Xm/Form.h>
+#include <Xm/Label.h>
+#include <Xm/PushB.h>
+#include <Xm/RowColumn.h>
+#include <Xm/Text.h>
+#include <Xm/Xm.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
+#include "izzy.h"
+#include "ialarm.h"
 #include "imain.h"
 #include "iinit.h"
 #include "xs_wprintf.h"
+
+/***********************************************************************
+ *
+ * Global Variables
+ *
+ ***********************************************************************/
+unsigned int    digitEncode[10];
+
+digitType       digit[4];
+
+char		segmentDir[7]; 	/* segment direction from its origin */
+XPoint		segmentOrg[7];	/* x,y coord of segment's origin */
+
+		/* global widgets used in the izzy main screen */
+Widget        	toplevel,
+		background,	/* form widget background */
+		clockFace,	/* where digits are printed */
+		dateArea;	/* where date is printed */
+
+GC		drawGC,
+eraseGC;
+
+AlarmType	theAlarm[MAX_ALARMS];
+int		numAlarms;
+int		curAlarm;
+
 
 int main (argc, argv)
    int argc;
@@ -65,7 +106,7 @@ int main (argc, argv)
     * schedule all alarms read in from the .izzyrc file
     */
    for(i = 0; i < numAlarms; i++)
-      ScheduleAlarm(i, NULL);
+       ScheduleAlarm(i, (XtIntervalId)NULL);
 
    XtRealizeWidget(toplevel);
 
@@ -248,11 +289,11 @@ Cardinal *num_params;
 
    char timeBuf[TIME_LEN];
    char dateBuf[DATE_LEN];
-   char foo[2];
-   int bar;
-   int i;
+   //char foo[2];
+   //int bar;
+   //int i;
    time_t tloc;
-   time_t newTloc;
+   //time_t newTloc;
 
    /*
     * get the GMT time in time_t format

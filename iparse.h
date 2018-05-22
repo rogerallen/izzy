@@ -5,7 +5,6 @@
  * header file for iinit.c
  *
  ***********************************************************************/
-#include "izzy.h"
 
 void ParseAlarmFile(void);
 void ParseLine(char theLine[], int theAlarmNumber);

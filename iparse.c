@@ -5,8 +5,23 @@
  * Routines to parse the izzyrc file
  *
  ***********************************************************************/
+#include <X11/Intrinsic.h>
+#include <X11/StringDefs.h>
+#include <Xm/DrawingA.h>
+#include <Xm/Form.h>
+#include <Xm/Label.h>
+#include <Xm/PushB.h>
+#include <Xm/RowColumn.h>
+#include <Xm/Text.h>
+#include <Xm/Xm.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "izzy.h"
 #include "iparse.h"
+
+extern AlarmType	theAlarm[MAX_ALARMS];
+extern int		numAlarms;
 
 void ParseAlarmFile()
 {
@@ -34,6 +49,7 @@ void ParseAlarmFile()
 
 void ParseLine(theLine,theAlarmNumber)
    char theLine[255];
+   int theAlarmNumber;
 {
    char firstWord[80],
 	secondWord[80];
@@ -84,7 +100,7 @@ void ParseLine(theLine,theAlarmNumber)
      ParseAtTime(theAlarmNumber);
 
    } else {
-     fprintf(stderr,"there is an error on line %u of the alarm file\n",
+     fprintf(stderr,"there is an error on line %s of the alarm file\n",
 	     theLine);
    }
 
@@ -122,7 +138,7 @@ void ParseAtTime(theAlarmNumber)
 void ParseCommand(theAlarmNumber)
    int  theAlarmNumber;
 {
-   char thirdWord[80];
+    //char thirdWord[80];
 
    /*
     * get the command

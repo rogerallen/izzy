@@ -5,7 +5,6 @@
  * header file for imain.c
  *
  **********************************************************************/
-#include "izzy.h"
 
 void DoTime(XtIntervalId id);
 void PrintTime(char *timeBuf, int reverse);
