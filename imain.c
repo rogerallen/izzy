@@ -12,11 +12,12 @@
  *---------------------------------------------------------------------
  *
  **********************************************************************/
+#include <stdlib.h>
 #include "imain.h"
 #include "iinit.h"
 #include "xs_wprintf.h"
 
-main (argc, argv)
+int main (argc, argv)
    int argc;
    char *argv[];
 {
@@ -50,7 +51,7 @@ main (argc, argv)
 
    XtAddActions(newActions, XtNumber(newActions));
 
-   /* 
+   /*
     * initialize all children
     */
    InitWidgets();
@@ -68,7 +69,7 @@ main (argc, argv)
 
    XtRealizeWidget(toplevel);
 
-   /* 
+   /*
     * after realization, initialize the things that needed widgets to be
     * realized.
     */
@@ -84,12 +85,12 @@ main (argc, argv)
 /******************************
  *
  * DoTime()
- * 
+ *
  * this routine gets the current time, prints it out, and
  * installs itself as a timeout routine when the next minute will occur.
  *
  ******************************/
-void DoTime(id) 
+void DoTime(id)
    XtIntervalId id;
 {
    time_t      	tloc,
@@ -130,7 +131,7 @@ void PrintTime(timeBuf, reverse)
    int reverse;
 {
    char foo[2];
-   int i;	
+   int i;
 
    if(!reverse) {
       /*
@@ -143,15 +144,15 @@ void PrintTime(timeBuf, reverse)
        */
       XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
 		  drawGC,
-		  2*SEG_LENGTH + 15*SEG_WIDTH/2, 
+		  2*SEG_LENGTH + 15*SEG_WIDTH/2,
 		  SEG_LENGTH,
 		  SEG_WIDTH, SEG_WIDTH);
       XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
 		  drawGC,
-		  2*SEG_LENGTH + 15*SEG_WIDTH/2, 
-		  3*SEG_WIDTH + SEG_LENGTH,        
+		  2*SEG_LENGTH + 15*SEG_WIDTH/2,
+		  3*SEG_WIDTH + SEG_LENGTH,
 		  SEG_WIDTH, SEG_WIDTH);
-  
+
       /*
        * draw each digit
        */
@@ -159,7 +160,7 @@ void PrintTime(timeBuf, reverse)
          /*
           * update the value of each segment
           */
-         foo[0] = timeBuf[i];        
+         foo[0] = timeBuf[i];
          foo[1] = '\0';
          digit[i].value = digitEncode[atoi(foo)];
          /*
@@ -178,15 +179,15 @@ void PrintTime(timeBuf, reverse)
        */
       XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
 		  eraseGC,
-		  2*SEG_LENGTH + 15*SEG_WIDTH/2, 
+		  2*SEG_LENGTH + 15*SEG_WIDTH/2,
 		  SEG_LENGTH,
 		  SEG_WIDTH, SEG_WIDTH);
       XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
 		  eraseGC,
-		  2*SEG_LENGTH + 15*SEG_WIDTH/2, 
-		  3*SEG_WIDTH + SEG_LENGTH,        
+		  2*SEG_LENGTH + 15*SEG_WIDTH/2,
+		  3*SEG_WIDTH + SEG_LENGTH,
 		  SEG_WIDTH, SEG_WIDTH);
-  
+
       /*
        * draw each digit
        */
@@ -194,7 +195,7 @@ void PrintTime(timeBuf, reverse)
          /*
           * update the value of each segment
           */
-         foo[0] = timeBuf[i];        
+         foo[0] = timeBuf[i];
          foo[1] = '\0';
          digit[i].value = digitEncode[atoi(foo)];
          /*
@@ -249,7 +250,7 @@ Cardinal *num_params;
    char dateBuf[DATE_LEN];
    char foo[2];
    int bar;
-   int i;	
+   int i;
    time_t tloc;
    time_t newTloc;
 
@@ -370,7 +371,7 @@ void Update()
    time_t      	tloc;
    char		dateBuf[DATE_LEN],
 		timeBuf[TIME_LEN];
-   /* 
+   /*
     * redraw the screen
     */
    /*
@@ -390,4 +391,3 @@ void Update()
    strftime( timeBuf, (int)DATE_LEN, "%I%M", localtime(&tloc));
    PrintTime(timeBuf, FALSE);
 }
-

@@ -5,9 +5,10 @@
  * Routines to parse the izzyrc file
  *
  ***********************************************************************/
+#include <stdlib.h>
 #include "iparse.h"
 
-void ParseAlarmFile() 
+void ParseAlarmFile()
 {
    FILE *alarmFile;
    int  lineCount;
@@ -30,17 +31,17 @@ void ParseAlarmFile()
       fclose(alarmFile);
    }
 }
- 
+
 void ParseLine(theLine,theAlarmNumber)
    char theLine[255];
 {
-   char firstWord[80], 
+   char firstWord[80],
 	secondWord[80];
    /*
     * get the first word, should be "only" or "every"
     */
    strcpy(firstWord,strtok(theLine," "));
-   
+
    if(!strncmp(firstWord,"onl",3)) {
       /* 1st word is ONLY */
       strcpy(secondWord,strtok(NULL," "));
@@ -56,48 +57,48 @@ void ParseLine(theLine,theAlarmNumber)
       ParseAtTime(theAlarmNumber);
 
    } else if(!strncmp(firstWord,"eve",3)) {
-      /* 1st word is EVERY */ 
+      /* 1st word is EVERY */
       strcpy(secondWord,strtok(NULL," "));
 
       strcpy(theAlarm[theAlarmNumber].date,"<n/a>");
 
       if(!strncmp(secondWord,"day",3))
-         theAlarm[theAlarmNumber].type = EVERY_DAY; 
+         theAlarm[theAlarmNumber].type = EVERY_DAY;
       else if(!strncmp(secondWord,"mon",3))
-         theAlarm[theAlarmNumber].type = EVERY_MONDAY; 
+         theAlarm[theAlarmNumber].type = EVERY_MONDAY;
       else if(!strncmp(secondWord,"tue",3))
-         theAlarm[theAlarmNumber].type = EVERY_TUESDAY; 
+         theAlarm[theAlarmNumber].type = EVERY_TUESDAY;
       else if(!strncmp(secondWord,"wed",3))
-         theAlarm[theAlarmNumber].type = EVERY_WEDNESDAY; 
+         theAlarm[theAlarmNumber].type = EVERY_WEDNESDAY;
       else if(!strncmp(secondWord,"thu",3))
-         theAlarm[theAlarmNumber].type = EVERY_THURSDAY; 
+         theAlarm[theAlarmNumber].type = EVERY_THURSDAY;
       else if(!strncmp(secondWord,"fri",3))
-         theAlarm[theAlarmNumber].type = EVERY_FRIDAY; 
+         theAlarm[theAlarmNumber].type = EVERY_FRIDAY;
       else if(!strncmp(secondWord,"sat",3))
-         theAlarm[theAlarmNumber].type = EVERY_SATURDAY; 
+         theAlarm[theAlarmNumber].type = EVERY_SATURDAY;
       else if(!strncmp(secondWord,"sun",3))
-         theAlarm[theAlarmNumber].type = EVERY_SUNDAY; 
+         theAlarm[theAlarmNumber].type = EVERY_SUNDAY;
       else if(!strncmp(secondWord,"hou",3))
-         theAlarm[theAlarmNumber].type = EVERY_HOUR; 
+         theAlarm[theAlarmNumber].type = EVERY_HOUR;
 
      ParseAtTime(theAlarmNumber);
 
    } else {
-     fprintf(stderr,"there is an error on line %u of the alarm file\n", 
+     fprintf(stderr,"there is an error on line %u of the alarm file\n",
 	     theLine);
    }
 
    ParseCommand(theAlarmNumber);
    numAlarms++;
 /****
-   fprintf(stderr,"Alarm[%u].type = %u\n", theAlarmNumber, 
+   fprintf(stderr,"Alarm[%u].type = %u\n", theAlarmNumber,
 		  theAlarm[theAlarmNumber].type);
-   fprintf(stderr,"Alarm[%u].date = %s\n", theAlarmNumber, 
+   fprintf(stderr,"Alarm[%u].date = %s\n", theAlarmNumber,
 		  theAlarm[theAlarmNumber].date);
 *****
-   fprintf(stderr,"Alarm[%u].time = %s\n", theAlarmNumber, 
+   fprintf(stderr,"Alarm[%u].time = %s\n", theAlarmNumber,
 		  theAlarm[theAlarmNumber].time);
-   fprintf(stderr,"Alarm[%u].command = %s\n", theAlarmNumber, 
+   fprintf(stderr,"Alarm[%u].command = %s\n", theAlarmNumber,
 		  theAlarm[theAlarmNumber].command);
 *****/
 }
@@ -105,7 +106,7 @@ void ParseLine(theLine,theAlarmNumber)
 void ParseAtTime(theAlarmNumber)
    int  theAlarmNumber;
 {
-   char thirdWord[80]; 
+   char thirdWord[80];
 
    /*
     * get the "at"
@@ -116,13 +117,13 @@ void ParseAtTime(theAlarmNumber)
     * get the time
     */
    strcpy(theAlarm[theAlarmNumber].time,strtok(NULL," "));
-} 
+}
 
 void ParseCommand(theAlarmNumber)
    int  theAlarmNumber;
 {
-   char thirdWord[80]; 
-     
+   char thirdWord[80];
+
    /*
     * get the command
     */

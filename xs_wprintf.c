@@ -3,11 +3,8 @@
  ***********************************************************/
 #include "xs_wprintf.h"
 
-void xs_wprintf(va_alist) 
-   va_dcl
+void xs_wprintf(Widget w, char *format, ...)
 {
-   Widget	w;
-   char		*format;
    va_list	args;
    char		str[1000];
    Arg		wargs[10];
@@ -15,18 +12,8 @@ void xs_wprintf(va_alist)
    /*
     * init the var len args list
     */
-   va_start(args);
+   va_start(args, format);
    /*
-    * get dest widget, make sure a XmLabel type
-    */
-   w = va_arg(args, Widget);
-   if(!XtIsSubclass(w, xmLabelWidgetClass))
-      XtError("xs_wprintf() requires a Label Widget");
-   /*
-    * get format
-    */
-   format = va_arg(args, char *);
-   /*  
     * print it
     */
    vsprintf(str, format, args);
@@ -36,5 +23,3 @@ void xs_wprintf(va_alist)
 
    va_end(args);
 }
-
-
