@@ -1,6 +1,12 @@
 /************************************************************
  * xs_wprintf: fprintf-like function for XmLabel widgets
  ***********************************************************/
+#include <X11/Intrinsic.h>
+#include <X11/StringDefs.h>
+#include <Xm/Xm.h>
+#include <Xm/Label.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include "xs_wprintf.h"
 
 void xs_wprintf(Widget w, char *format, ...)

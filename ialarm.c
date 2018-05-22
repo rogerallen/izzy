@@ -24,7 +24,7 @@ extern AlarmType	theAlarm[MAX_ALARMS];
 extern int		curAlarm;
 
 void Alarm(n, id)
-   int n;
+   long n;
    XtIntervalId id;
 {
    PlayAlarm(n);
@@ -36,7 +36,7 @@ void Alarm(n, id)
 }
 
 void PlayAlarm(n)
-   int n;
+   long n;
 {
    char commandStr[255];
 
@@ -46,7 +46,7 @@ void PlayAlarm(n)
 }
 
 void ScheduleAlarm(n, id)
-   int n;
+   long n;
    XtIntervalId id;
 {
    long         tloc,
@@ -112,20 +112,20 @@ void ScheduleDay(dayStr, n)
   long tloc;
   int re_schedule;
   char tmpStr[4];
-  long alarm_time;
+  //long alarm_time;
 
   strftime(tmpStr, 4, "%A", localtime(&tloc));
   if(!strncmp(dayStr,tmpStr,3)) {
-    alarm_time = AlarmToday(n, tloc, &re_schedule);
+    AlarmToday(n, tloc, &re_schedule);
   } else {
     /* schedule it to be scheduled at 00:00 */
     re_schedule = TRUE;
-    alarm_time = Time2Midnite(GetCurTime(tloc));
+    Time2Midnite(GetCurTime(tloc));
   }
 }
 
 long AlarmToday(n, tloc, re_schedule)
-   int n;
+   long n;
    long tloc;
    int *re_schedule;
 {
@@ -166,7 +166,7 @@ long Time2Midnite(curTime)
 }
 
 long GetAlarmTime(n)
-   int n;
+   long n;
 {
    long alarmTime;
    char tmpStr[3];

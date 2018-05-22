@@ -6,11 +6,11 @@
  *
  ***********************************************************************/
 
-void Alarm(int n, XtIntervalId id);
-void PlayAlarm(int n);
-void ScheduleAlarm(int n, XtIntervalId id);
+void Alarm(long n, XtIntervalId id);
+void PlayAlarm(long n);
+void ScheduleAlarm(long n, XtIntervalId id);
 void ScheduleDay(char *dayStr, int n);
-long AlarmToday(int n, long tloc, int *re_schedule);
+long AlarmToday(long n, long tloc, int *re_schedule);
 long Time2Midnite(long curTime);
-long GetAlarmTime(int n);
+long GetAlarmTime(long n);
 long GetCurTime(long tloc);

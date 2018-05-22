@@ -9,29 +9,16 @@ LIBS = -lXm -lXt -lX11
 
 # for DEFINES -
 # define the defines used here
-DEFINES = 	-DANSI
+DEFINES = -DANSI
 
-OBJECTS =	imain.o		iinit.o		xs_wprintf.o \
-		iparse.o	ialarm.o
+OBJECTS = imain.o iinit.o xs_wprintf.o iparse.o	ialarm.o
 
-CFILES =	imain.c		iinit.c		xs_wprintf.c \
-		iparse.c	ialarm.c
+CFILES = imain.c iinit.c xs_wprintf.c iparse.c ialarm.c
 
-HFILES =	izzy.h
+HFILES = ialarm.h  iinit.h  imain.h  iparse.h  izzy.h  xs_wprintf.h
 
 izzy: $(OBJECTS)
-	@echo $(CC) $(LFLAGS) $(DEFINES) -o izzy $(OBJECTS) $(LIBS)
-	@$(CC) $(LFLAGS) $(DEFINES) -o izzy $(OBJECTS) $(LIBS)
-
-install :
-	cp /usr/local/common/bin/izzy /usr/local/common/bin/izzy.old
-	cp izzy /usr/local/common/bin/izzy
-	cp man1/izzy.1 /usr/local/common/man/man1/izzy.1
-
-installcd1 :
-	cp /usr/local/cd1/bin/izzy /usr/local/cd1/bin/izzy.old
-	cp izzy /usr/local/cd1/bin/izzy
-	cp man1/izzy.1 /usr/local/cd1/man/man1/izzy.1
+	$(CC) $(LFLAGS) $(DEFINES) -o izzy $(OBJECTS) $(LIBS)
 
 clean :
 	rm $(OBJECTS) izzy
