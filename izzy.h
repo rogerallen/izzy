@@ -83,12 +83,12 @@ typedef struct alarm {
 void xs_wprintf(Widget w, char *format, ...);
 void InitWidgets(void);
 void InitDigits(void);
-void InitTime(void);
 void InitGC(void);
 void DoTime(XtIntervalId id);
 void PrintTime(char *timeBuf, int reverse);
 void IMouseUp(Widget w, XEvent *event, String *params, Cardinal *num_params);
 void IMouseDown(Widget w, XEvent *event, String *params, Cardinal *num_params);
-void DrawDigit(digitType digit, int reverse);
-void DrawSegment(XPoint origin, int segNum, int reverse);
+void DrawDigit(digitType digit, GC fg);
+void DrawSegment(XPoint origin, int segNum, GC fg);
 void Update(void);
+time_t UpdateTime(int write_date);

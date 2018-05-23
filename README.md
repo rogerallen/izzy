@@ -7,9 +7,9 @@ A digital clock for X Windows
 
 By Roger Allen
 
-This is probably the oldest working code I have.  Looks like I started this in November, 1991 and I found the code & decided to do some cleanup in May, 2018 -- 26 years later.
+This is probably the oldest working code I have.  Looks like I started this in November, 1991 and I found the code & decided to do some cleanup in May, 2018 -- 26 years later.  I think I started this on a Sun Workstation at Amdahl, updated it somewhat to work on SGI Workstations at Silicon Graphics and then forgot about it when I went off to join the PC/Windows revolution.
 
-All I had to do to get this going on Ubuntu was `sudo apt-get install libmotif-dev` and compile it.  That was a surprise.
+All I had to do to get this going on Ubuntu was `sudo apt-get install libmotif-dev` and compile it.  That was a surprise after not touching this since 1998.  Thank you X11 & Linux!
 
 I removed some crufty and downright unsafe code that allowed for running programs on a schedule.  So, now all this does is display an nice digital display.  But that's what I wanted it to do.
 

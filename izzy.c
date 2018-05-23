@@ -186,13 +186,6 @@ void InitDigits()
 
 }
 
-void InitTime()
-{
-    // add the timeout with an initial delay
-    XtAddTimeOut(INIT_DELAY, (XtTimerCallbackProc) DoTime, (XtPointer)NULL);
-
-}
-
 void InitGC()
 {
     XGCValues values;
@@ -211,7 +204,7 @@ void InitGC()
     // create erasing GC
     n = 0;
     XtSetArg( args[n], XtNbackground, &values.foreground); n++;
-    XtSetArg( args[n], XtNbackground, &values.background); n++;
+    XtSetArg( args[n], XtNforeground, &values.background); n++;
     XtGetValues(clockFace, args, n);
     eraseGC = XCreateGC(XtDisplay(clockFace), XtWindow(clockFace),
                         GCForeground | GCBackground,
@@ -219,28 +212,14 @@ void InitGC()
 
 }
 
-// DoTime()
-//
 // this routine gets the current time, prints it out, and
 // installs itself as a timeout routine when the next minute will occur.
 void DoTime(id)
     XtIntervalId id;
 {
-    time_t       tloc,
-        next_minute;
-    char         dateBuf[DATE_LEN],
-        timeBuf[TIME_LEN];
+    time_t tloc, next_minute;
 
-    // get the GMT time in time_t format
-    time(&tloc);
-
-    // get the date into dateBuf, and write it to the date area.
-    strftime( dateBuf, (int)DATE_LEN, "%A, %B %d", localtime(&tloc));
-    xs_wprintf( dateArea, "%s", dateBuf);
-
-    // get the time into timeBuf, and write it to the time area.
-    strftime( timeBuf, (int)DATE_LEN, "%I%M", localtime(&tloc));
-    PrintTime(timeBuf, FALSE);
+    tloc = UpdateTime(FALSE);
 
     // set up interrupt for the next time
     next_minute = (60 - tloc % 60) * 1000;
@@ -254,53 +233,30 @@ void PrintTime(timeBuf, reverse)
     char foo[2];
     int i;
 
-    // FIXME! this is dumb
-    if(!reverse) {
-        // erase the clock area
-        XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
-                       eraseGC, 0, 0, CLOCK_WIDTH, CLOCK_HEIGHT);
-        // draw the two little dots
-        XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
-                       drawGC,
-                       2*SEG_LENGTH + 15*SEG_WIDTH/2,
-                       SEG_LENGTH,
-                       SEG_WIDTH, SEG_WIDTH);
-        XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
-                       drawGC,
-                       2*SEG_LENGTH + 15*SEG_WIDTH/2,
-                       3*SEG_WIDTH + SEG_LENGTH,
-                       SEG_WIDTH, SEG_WIDTH);
+    GC fg = reverse ? eraseGC : drawGC;
+    GC bg = reverse ? drawGC : eraseGC;
 
-        // draw each digit
-        for( i = 0; i < 4; i++) {
-            foo[0] = timeBuf[i];
-            foo[1] = '\0';
-            digit[i].value = digitEncode[atoi(foo)];
-            DrawDigit(digit[i], FALSE);
-        }
-    } else {
-        // erase the clock area
-        XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
-                       drawGC, 0, 0, CLOCK_WIDTH, CLOCK_HEIGHT);
-        // draw the two little dots
-        XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
-                       eraseGC,
-                       2*SEG_LENGTH + 15*SEG_WIDTH/2,
-                       SEG_LENGTH,
-                       SEG_WIDTH, SEG_WIDTH);
-        XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
-                       eraseGC,
-                       2*SEG_LENGTH + 15*SEG_WIDTH/2,
-                       3*SEG_WIDTH + SEG_LENGTH,
-                       SEG_WIDTH, SEG_WIDTH);
+    // the clock area
+    XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
+                   bg, 0, 0, CLOCK_WIDTH, CLOCK_HEIGHT);
+    // draw the two little dots
+    XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
+                   fg,
+                   2*SEG_LENGTH + 15*SEG_WIDTH/2,
+                   SEG_LENGTH,
+                   SEG_WIDTH, SEG_WIDTH);
+    XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
+                   fg,
+                   2*SEG_LENGTH + 15*SEG_WIDTH/2,
+                   3*SEG_WIDTH + SEG_LENGTH,
+                   SEG_WIDTH, SEG_WIDTH);
 
-        // draw each digit
-        for( i = 0; i < 4; i++) {
-            foo[0] = timeBuf[i];
-            foo[1] = '\0';
-            digit[i].value = digitEncode[atoi(foo)];
-            DrawDigit(digit[i], TRUE);
-        }
+    // draw each digit
+    for( i = 0; i < 4; i++) {
+        foo[0] = timeBuf[i];
+        foo[1] = '\0';
+        digit[i].value = digitEncode[atoi(foo)];
+        DrawDigit(digit[i], fg);
     }
 
 }
@@ -312,23 +268,7 @@ void IMouseUp(w, event, params, num_params)
     String *params;
     Cardinal *num_params;
 {
-
-    char timeBuf[TIME_LEN];
-    char dateBuf[DATE_LEN];
-    time_t tloc;
-
-    // get the GMT time in time_t format
-    time(&tloc);
-
-    strftime( timeBuf, (size_t)DATE_LEN, "%I%M", localtime(&tloc));
-
-    // get the date into dateBuf, and write it to the date area.
-    strftime( dateBuf, (size_t)DATE_LEN, "%A, %B %d", localtime(&tloc));
-    xs_wprintf( dateArea, "%s", dateBuf);
-
-    // print the time in the clock area
-    PrintTime(timeBuf, FALSE);
-
+    UpdateTime(FALSE);
 }
 
 // callback from mouse down
@@ -338,42 +278,26 @@ void IMouseDown(w, event, params, num_params)
     String *params;
     Cardinal *num_params;
 {
-
-    char timeBuf[TIME_LEN];
-    char dateBuf[DATE_LEN];
-    time_t tloc;
-
-    // get the GMT time in time_t format
-    time(&tloc);
-
-    strftime( timeBuf, (int)DATE_LEN, "%I%M", localtime(&tloc));
-
-    // print the time in the clock area
-    PrintTime(timeBuf, TRUE);
-
-    // write to the date area.
-    sprintf( dateBuf, "Izzy, by Roger Allen");
-    xs_wprintf( dateArea, "%s", dateBuf);
-
+    UpdateTime(TRUE);
 }
 
-void DrawDigit(digit, reverse)
+void DrawDigit(digit, fg)
     digitType digit;
-    int reverse;
+    GC fg;
 {
     int i;
 
     // draw each enabled segment in the current digit
     for(i = 0; i < 7; i++) {
         if ( (1 << (6-i)) & digit.value)
-            DrawSegment( digit.origin, i, reverse);
+            DrawSegment( digit.origin, i, fg);
     }
 }
 
-void DrawSegment( origin, segNum, reverse)
+void DrawSegment( origin, segNum, fg)
     XPoint origin;
     int segNum;
-    int reverse;
+    GC fg;
 {
     XPoint base, points[7];
 
@@ -415,47 +339,44 @@ void DrawSegment( origin, segNum, reverse)
     }
 
     // fill the segment
-    if(!reverse) {
-        XDrawLines(XtDisplay(clockFace),
-                   XtWindow(clockFace),
-                   drawGC,
-                   points, 7, CoordModeOrigin
-            );
-        XFillPolygon(XtDisplay(clockFace),
-                     XtWindow(clockFace),
-                     drawGC,
-                     points, 7, Convex, CoordModeOrigin
-            );
-    } else {
-        XDrawLines(XtDisplay(clockFace),
-                   XtWindow(clockFace),
-                   eraseGC,
-                   points, 7, CoordModeOrigin
-            );
-        XFillPolygon(XtDisplay(clockFace),
-                     XtWindow(clockFace),
-                     eraseGC,
-                     points, 7, Convex, CoordModeOrigin
-            );
-    }
-
+    XDrawLines(XtDisplay(clockFace),
+               XtWindow(clockFace),
+               fg,
+               points, 7, CoordModeOrigin
+        );
+    XFillPolygon(XtDisplay(clockFace),
+                 XtWindow(clockFace),
+                 fg,
+                 points, 7, Convex, CoordModeOrigin
+        );
 }
 
-void Update()
+void Update() {
+    UpdateTime(FALSE);
+}
+
+time_t UpdateTime(int reverse)
 {
     time_t       tloc;
-    char         dateBuf[DATE_LEN],
-        timeBuf[TIME_LEN];
+    char         dateBuf[DATE_LEN], timeBuf[TIME_LEN];
     // get the GMT time in time_t format
     time(&tloc);
 
-    // get the date into dateBuf, and write it to the date area.
-    strftime( dateBuf, (int)DATE_LEN, "%A, %B %d", localtime(&tloc));
-    xs_wprintf( dateArea, "%s", dateBuf);
-
+    if(reverse) {
+        // write to the date area.
+        sprintf( dateBuf, "Izzy, by Roger Allen");
+        xs_wprintf( dateArea, "%s", dateBuf);
+    }
+    else {
+        // get the date into dateBuf, and write it to the date area.
+        strftime( dateBuf, (int)DATE_LEN, "%A, %B %d", localtime(&tloc));
+        xs_wprintf( dateArea, "%s", dateBuf);
+    }
     // get the time into timeBuf, and write it to the time area.
     strftime( timeBuf, (int)DATE_LEN, "%I%M", localtime(&tloc));
-    PrintTime(timeBuf, FALSE);
+    PrintTime(timeBuf, reverse);
+
+    return tloc;
 }
 
 int main (argc, argv)
@@ -492,7 +413,8 @@ int main (argc, argv)
     XtAddActions(newActions, XtNumber(newActions));
 
     InitWidgets();
-    InitTime();
+    // add the timeout with an initial delay
+    XtAddTimeOut(INIT_DELAY, (XtTimerCallbackProc) DoTime, (XtPointer)NULL);
     XtRealizeWidget(toplevel);
     InitGC();
 
