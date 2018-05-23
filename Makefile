@@ -1,23 +1,15 @@
 CC	= gcc
-OPT    = -g
-#OPT    = -O
+#OPT    = -g
+OPT    = -O3
 CFLAGS = -pedantic -Wall -c $(OPT) -I/usr/include/X11/motif
 LFLAGS = $(OPT) -L/usr/lib/X11/lib
 LIBS = -lXm -lXt -lX11
 
-# for DEFINES -
-# define the defines used here
-DEFINES = -DANSI
+izzy: izzy.o
+	$(CC) $(LFLAGS) -o izzy izzy.o $(LIBS)
 
-OBJECTS = izzy.o
-CFILES = izzy.c
-HFILES = izzy.h
-
-izzy: $(OBJECTS)
-	$(CC) $(LFLAGS) $(DEFINES) -o izzy $(OBJECTS) $(LIBS)
+izzy.o : izzy.c izzy.h
+	$(CC) $(CFLAGS) izzy.c
 
 clean :
-	rm $(OBJECTS) izzy
-
-izzy.o : izzy.c $(HFILES)
-	$(CC) $(CFLAGS) $(DEFINES) izzy.c
+	rm izzy.o izzy
