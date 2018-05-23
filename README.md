@@ -11,7 +11,7 @@ This is probably the oldest working code I have.  Looks like I started this in N
 
 All I had to do to get this going on Ubuntu was `sudo apt-get install libmotif-dev` and compile it.  That was a surprise after not touching this since 1998.  Thank you X11 & Linux!
 
-I removed some crufty and downright unsafe code that allowed for running programs on a schedule.  So, now all this does is display an nice digital display.  But that's what I wanted it to do.
+I removed some crufty and downright unsafe code that allowed for running programs on a schedule.  So, now all this does is show an nice digital display.  But that's all I really wanted it to do.
 
 Usage
 -----
