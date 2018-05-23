@@ -9,9 +9,9 @@ LIBS = -lXm -lXt -lX11
 # define the defines used here
 DEFINES = -DANSI
 
-OBJECTS = izzy.o xs_wprintf.o
-CFILES = izzy.c xs_wprintf.c
-HFILES = izzy.h xs_wprintf.h
+OBJECTS = izzy.o
+CFILES = izzy.c
+HFILES = izzy.h
 
 izzy: $(OBJECTS)
 	$(CC) $(LFLAGS) $(DEFINES) -o izzy $(OBJECTS) $(LIBS)
@@ -21,6 +21,3 @@ clean :
 
 izzy.o : izzy.c $(HFILES)
 	$(CC) $(CFLAGS) $(DEFINES) izzy.c
-
-xs_wprintf.o 	: xs_wprintf.c
-	$(CC) $(CFLAGS) $(DEFINES) xs_wprintf.c

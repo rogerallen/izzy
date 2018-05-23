@@ -1,8 +1,4 @@
-/***********************************************************************
- *
- * izzy.h:  A digital clock for X windows
- *
- **********************************************************************/
+// izzy.h
 
 /***********************************************************************
  *
@@ -28,15 +24,15 @@
  *
  **********************************************************************/
 typedef struct {
-	XPoint			origin;
-	unsigned int		value;	/* see preceding table */
+    XPoint                  origin;
+    unsigned int            value;  /* see preceding table */
 } digitType;
 
 typedef struct alarm {
-   unsigned int type;
-   char 	date[10];
-   char		time[10];
-   char         command[255];
+    unsigned int type;
+    char         date[10];
+    char         time[10];
+    char         command[255];
 } AlarmType;
 
 #define REPEATING_ALARM 0x80
@@ -53,7 +49,7 @@ typedef struct alarm {
 #define DLG_H_SPC 5
 #define DLG_V_SPC 5
 #define MAX_ALARMS 50
-#define INIT_DELAY 500  	/* time for initial delay */
+#define INIT_DELAY 500          /* time for initial delay */
 #define ONLY_TODAY                0x00 /* types of alarms */
 #define ONLY_MMDDYY               0x01
 #define EVERY_HOUR                0x81
@@ -65,26 +61,12 @@ typedef struct alarm {
 #define EVERY_FRIDAY              0xa5
 #define EVERY_SATURDAY            0xa6
 #define EVERY_SUNDAY              0xa7
-/************************************************************************
- *
- * iinit.h
- *
- * header file for iinit.c
- *
- ***********************************************************************/
 
+void xs_wprintf(Widget w, char *format, ...);
 void InitWidgets(void);
 void InitDigits(void);
 void InitTime(void);
 void InitGC(void);
-/***********************************************************************
- *
- * imain.h
- *
- * header file for imain.c
- *
- **********************************************************************/
-
 void DoTime(XtIntervalId id);
 void PrintTime(char *timeBuf, int reverse);
 void IMouseUp(Widget w, XEvent *event, String *params, Cardinal *num_params);
