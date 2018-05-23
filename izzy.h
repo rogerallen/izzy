@@ -65,3 +65,30 @@ typedef struct alarm {
 #define EVERY_FRIDAY              0xa5
 #define EVERY_SATURDAY            0xa6
 #define EVERY_SUNDAY              0xa7
+/************************************************************************
+ *
+ * iinit.h
+ *
+ * header file for iinit.c
+ *
+ ***********************************************************************/
+
+void InitWidgets(void);
+void InitDigits(void);
+void InitTime(void);
+void InitGC(void);
+/***********************************************************************
+ *
+ * imain.h
+ *
+ * header file for imain.c
+ *
+ **********************************************************************/
+
+void DoTime(XtIntervalId id);
+void PrintTime(char *timeBuf, int reverse);
+void IMouseUp(Widget w, XEvent *event, String *params, Cardinal *num_params);
+void IMouseDown(Widget w, XEvent *event, String *params, Cardinal *num_params);
+void DrawDigit(digitType digit, int reverse);
+void DrawSegment(XPoint origin, int segNum, int reverse);
+void Update(void);
