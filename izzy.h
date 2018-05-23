@@ -53,7 +53,6 @@ typedef struct alarm {
     char         command[255];
 } AlarmType;
 
-#define REPEATING_ALARM 0x80
 #define DATE_LEN 40
 #define TIME_LEN 5
 #define SEG_LENGTH 17
@@ -66,19 +65,6 @@ typedef struct alarm {
 #define BUTTON_WIDTH 55
 #define DLG_H_SPC 5
 #define DLG_V_SPC 5
-#define MAX_ALARMS 50
-#define INIT_DELAY 500          /* time for initial delay */
-#define ONLY_TODAY                0x00 /* types of alarms */
-#define ONLY_MMDDYY               0x01
-#define EVERY_HOUR                0x81
-#define EVERY_DAY                 0xa0
-#define EVERY_MONDAY              0xa1
-#define EVERY_TUESDAY             0xa2
-#define EVERY_WEDNESDAY           0xa3
-#define EVERY_THURSDAY            0xa4
-#define EVERY_FRIDAY              0xa5
-#define EVERY_SATURDAY            0xa6
-#define EVERY_SUNDAY              0xa7
 
 void xs_wprintf(Widget w, char *format, ...);
 void InitWidgets(void);

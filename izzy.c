@@ -414,7 +414,7 @@ int main (argc, argv)
 
     InitWidgets();
     // add the timeout with an initial delay
-    XtAddTimeOut(INIT_DELAY, (XtTimerCallbackProc) DoTime, (XtPointer)NULL);
+    XtAddTimeOut(500, (XtTimerCallbackProc) DoTime, (XtPointer)NULL);
     XtRealizeWidget(toplevel);
     InitGC();
 
