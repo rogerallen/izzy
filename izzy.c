@@ -39,33 +39,18 @@
 #include <stdlib.h>
 #include <time.h>
 
-//
-// the digitType.value field is encoded so that each bit stands for a
-// segment in a digit.  Therefore, for each number the following table
-// shows how each digit is encoded.
-//
-// The digit segments are arranged like so:    0
-//                                            1 2
-//                                             3
-//                                            4 5
-//                                             6
-//       Displayed Digit
-//  Seg# 0 1 2 3 4 5 6 7 8 9
-//  ----+----------
-//    0 |x   x x   x x x x x
-//    1 |x       x x x   x x
-//    2 |x x x x x     x x x
-//    3 |    x x x x x   x x
-//    4 |x   x       x   x
-//    5 |x x   x x x x x x x
-//    6 |x   x x   x x   x x
-//
+// ----------------------------------------------------------------------
+// Each digit container.  The value field is encoded so that each bit
+// stands for a segment in a digit.  Bits for each digit are stored in
+// g_digit_encode[].
 typedef struct
 {
     XPoint origin;
     unsigned int value;
 } digitType;
 
+// ----------------------------------------------------------------------
+// constants
 const int DATE_LEN = 40;
 const int TIME_LEN = 5;
 const int SEG_LENGTH = 17;
@@ -76,6 +61,8 @@ const int DATE_HEIGHT = 20;
 const int LABEL_HEIGHT = 25;
 const int BUTTON_WIDTH = 55;
 
+// ----------------------------------------------------------------------
+// declarations
 void xs_wprintf(Widget w, char *format, ...);
 void InitWidgets(void);
 void InitGC(void);
@@ -88,10 +75,19 @@ void DrawSegment(XPoint origin, int segNum, GC fg);
 void Update(void);
 time_t UpdateTime(int write_date);
 
+// ----------------------------------------------------------------------
 // Global Variables
-unsigned int g_digit_encode[10] = {
-    0x77, 0x12, 0x5d, 0x5b, 0x3a,
-    0x6b, 0x6f, 0x52, 0x7f, 0x7b};
+//
+// The digit segments are arranged like so:
+//  o-0-     o=origin
+//  |   |
+//  1   2
+//  |   |
+//   -3-
+//  |   |
+//  4   5
+//  |   |
+//   -6-
 // segment direction from its origin
 char g_segment_direction[7] = {
     'h', 'v', 'v', 'h', 'v', 'v', 'h'};
@@ -104,6 +100,27 @@ XPoint g_segment_origin[7] = {
     {.x = 0, .y = 1 * SEG_LENGTH},
     {.x = 1 * SEG_LENGTH, .y = 1 * SEG_LENGTH},
     {.x = 0, .y = 2 * SEG_LENGTH}};
+
+// g_digit_encode maps a digit to the bits that encode each segment.
+//         Segment Number (bit)
+// Digit | 6 5 4.3 2 1 0
+// ------+------.--------
+//   0   | x x x.  x x x  | 0x77
+//   1   |   x  .  x      | 0x24
+//   2   | x   x.x x   x  | 0x5d
+//   3   | x x  .x x   x  | 0x6d
+//   4   |   x  .x x x    | 0x2e
+//   5   | x x  .x   x x  | 0x6b
+//   6   | x x x.x   x x  | 0x7b
+//   7   |   x  .  x   x  | 0x25
+//   8   | x x x.x x x x  | 0x7f
+//   9   | x x  .x x x x  | 0x6f
+//
+unsigned int g_digit_encode[10] = {
+    0x77, 0x24, 0x5d, 0x6d, 0x2e,
+    0x6b, 0x7b, 0x25, 0x7f, 0x6f};
+
+// each digit's origin is set here, the value will be set during runtime
 digitType g_digit[4] = {
     {.origin = {.x = 3 * SEG_WIDTH, .y = 2 * SEG_WIDTH}, .value = 0},
     {.origin = {.x = 6 * SEG_WIDTH + SEG_LENGTH, .y = 2 * SEG_WIDTH}, .value = 0},
@@ -305,8 +322,10 @@ void DrawDigit(digitType digit, GC fg)
     // draw each enabled segment in the current digit
     for (i = 0; i < 7; i++)
     {
-        if ((1 << (6 - i)) & digit.value)
+        if ((1 << i) & digit.value)
+        {
             DrawSegment(digit.origin, i, fg);
+        }
     }
 }
 
