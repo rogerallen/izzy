@@ -1,4 +1,4 @@
-// Copyright (c) 1991-2018 Roger Allen
+// Copyright (c) 1991-2023 Roger Allen
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -41,24 +41,26 @@
  *    6 |x   x x   x x   x x
  *
  **********************************************************************/
-typedef struct {
-    XPoint                  origin;
-    unsigned int            value;  /* see preceding table */
+typedef struct
+{
+    XPoint origin;
+    unsigned int value; /* see preceding table */
 } digitType;
 
-typedef struct alarm {
+typedef struct alarm
+{
     unsigned int type;
-    char         date[10];
-    char         time[10];
-    char         command[255];
+    char date[10];
+    char time[10];
+    char command[255];
 } AlarmType;
 
 #define DATE_LEN 40
 #define TIME_LEN 5
 #define SEG_LENGTH 17
 #define SEG_WIDTH 4
-#define CLOCK_WIDTH 17*SEG_WIDTH + 4*SEG_LENGTH
-#define CLOCK_HEIGHT 11*SEG_WIDTH/2 + 2*SEG_LENGTH
+#define CLOCK_WIDTH 17 * SEG_WIDTH + 4 * SEG_LENGTH
+#define CLOCK_HEIGHT 11 * SEG_WIDTH / 2 + 2 * SEG_LENGTH
 #define DATE_HEIGHT 20
 #define ICON_AREA_HEIGHT 0
 #define LABEL_HEIGHT 25
@@ -70,7 +72,7 @@ void xs_wprintf(Widget w, char *format, ...);
 void InitWidgets(void);
 void InitDigits(void);
 void InitGC(void);
-void DoTime(XtIntervalId id);
+void DoTime(XtPointer d, XtIntervalId *id);
 void PrintTime(char *timeBuf, int reverse);
 void IMouseUp(Widget w, XEvent *event, String *params, Cardinal *num_params);
 void IMouseDown(Widget w, XEvent *event, String *params, Cardinal *num_params);
