@@ -38,18 +38,82 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "izzy.h"
+
+//
+// the digitType.value field is encoded so that each bit stands for a
+// segment in a digit.  Therefore, for each number the following table
+// shows how each digit is encoded.
+//
+// The digit segments are arranged like so:    0
+//                                            1 2
+//                                             3
+//                                            4 5
+//                                             6
+//       Displayed Digit
+//  Seg# 0 1 2 3 4 5 6 7 8 9
+//  ----+----------
+//    0 |x   x x   x x x x x
+//    1 |x       x x x   x x
+//    2 |x x x x x     x x x
+//    3 |    x x x x x   x x
+//    4 |x   x       x   x
+//    5 |x x   x x x x x x x
+//    6 |x   x x   x x   x x
+//
+typedef struct
+{
+    XPoint origin;
+    unsigned int value;
+} digitType;
+
+const int DATE_LEN = 40;
+const int TIME_LEN = 5;
+const int SEG_LENGTH = 17;
+const int SEG_WIDTH = 4;
+const int CLOCK_WIDTH = 17 * SEG_WIDTH + 4 * SEG_LENGTH;
+const int CLOCK_HEIGHT = 11 * SEG_WIDTH / 2 + 2 * SEG_LENGTH;
+const int DATE_HEIGHT = 20;
+const int LABEL_HEIGHT = 25;
+const int BUTTON_WIDTH = 55;
+
+void xs_wprintf(Widget w, char *format, ...);
+void InitWidgets(void);
+void InitGC(void);
+void DoTime(XtPointer d, XtIntervalId *id);
+void PrintTime(char *timeBuf, int reverse);
+void IMouseUp(Widget w, XEvent *event, String *params, Cardinal *num_params);
+void IMouseDown(Widget w, XEvent *event, String *params, Cardinal *num_params);
+void DrawDigit(digitType digit, GC fg);
+void DrawSegment(XPoint origin, int segNum, GC fg);
+void Update(void);
+time_t UpdateTime(int write_date);
 
 // Global Variables
-unsigned int digitEncode[10];
-digitType digit[4];
-char segmentDir[7];   // segment direction from its origin
-XPoint segmentOrg[7]; // x,y coord of segment's origin
-Widget toplevel,      // widgets used in the izzy main screen
-    background,       // form widget background
-    clockFace,        // where digits are printed
-    dateArea;         // where date is printed
-GC drawGC, eraseGC;
+unsigned int g_digit_encode[10] = {
+    0x77, 0x12, 0x5d, 0x5b, 0x3a,
+    0x6b, 0x6f, 0x52, 0x7f, 0x7b};
+// segment direction from its origin
+char g_segment_direction[7] = {
+    'h', 'v', 'v', 'h', 'v', 'v', 'h'};
+// x,y coord of segment's origin
+XPoint g_segment_origin[7] = {
+    {.x = 0, .y = 0},
+    {.x = 0, .y = 0},
+    {.x = 1 * SEG_LENGTH, .y = 0},
+    {.x = 0, .y = 1 * SEG_LENGTH},
+    {.x = 0, .y = 1 * SEG_LENGTH},
+    {.x = 1 * SEG_LENGTH, .y = 1 * SEG_LENGTH},
+    {.x = 0, .y = 2 * SEG_LENGTH}};
+digitType g_digit[4] = {
+    {.origin = {.x = 3 * SEG_WIDTH, .y = 2 * SEG_WIDTH}, .value = 0},
+    {.origin = {.x = 6 * SEG_WIDTH + SEG_LENGTH, .y = 2 * SEG_WIDTH}, .value = 0},
+    {.origin = {.x = 10 * SEG_WIDTH + 2 * SEG_LENGTH, .y = 2 * SEG_WIDTH}, .value = 0},
+    {.origin = {.x = 14 * SEG_WIDTH + 3 * SEG_LENGTH, .y = 2 * SEG_WIDTH}, .value = 0}};
+Widget g_toplevel_widget, // widgets used in the izzy main screen
+    g_background_widget,  // form widget background
+    g_clock_face_widget,  // where digits are printed
+    g_date_area_widget;   // where date is printed
+GC g_draw_GC, g_erase_GC;
 
 void xs_wprintf(Widget w, char *format, ...)
 {
@@ -74,19 +138,16 @@ void InitWidgets(void)
       <BtnUp>:   IMouseUp()\n     \
     ";
 
-    // initialize the clock face digit structures
-    InitDigits();
-
     // set up the widgets
     // background = form widget
     n = 0;
     XtSetArg(args[n], XmNwidth, CLOCK_WIDTH);
     n++;
     XtSetArg(args[n], XmNheight,
-             CLOCK_HEIGHT + DATE_HEIGHT + ICON_AREA_HEIGHT);
+             CLOCK_HEIGHT + DATE_HEIGHT);
     n++;
-    background = XtCreateManagedWidget("background", xmFormWidgetClass,
-                                       toplevel, args, n);
+    g_background_widget = XtCreateManagedWidget("background", xmFormWidgetClass,
+                                                g_toplevel_widget, args, n);
 
     // clockFace = drawing area widget
     n = 0;
@@ -102,11 +163,11 @@ void InitWidgets(void)
     n++;
     XtSetArg(args[n], XmNheight, CLOCK_HEIGHT);
     n++;
-    clockFace = XtCreateManagedWidget("clockFace", xmDrawingAreaWidgetClass,
-                                      background, args, n);
+    g_clock_face_widget = XtCreateManagedWidget("clockFace", xmDrawingAreaWidgetClass,
+                                                g_background_widget, args, n);
 
     XtOverrideTranslations(
-        clockFace,
+        g_clock_face_widget,
         XtParseTranslationTable(translations));
 
     // dateArea = label widget
@@ -123,80 +184,27 @@ void InitWidgets(void)
     n++;
     XtSetArg(args[n], XmNheight, DATE_HEIGHT);
     n++;
-    dateArea = XtCreateManagedWidget("dateArea", xmLabelWidgetClass,
-                                     background, args, n);
+    g_date_area_widget = XtCreateManagedWidget("dateArea", xmLabelWidgetClass,
+                                               g_background_widget, args, n);
 
     // set up the toplevel min/max size
     n = 0;
     XtSetArg(args[n], XmNmaxWidth, CLOCK_WIDTH);
     n++;
     XtSetArg(args[n], XmNmaxHeight,
-             CLOCK_HEIGHT + DATE_HEIGHT + ICON_AREA_HEIGHT);
+             CLOCK_HEIGHT + DATE_HEIGHT);
     n++;
     XtSetArg(args[n], XmNminWidth, CLOCK_WIDTH);
     n++;
     XtSetArg(args[n], XmNminHeight, CLOCK_HEIGHT);
     n++;
-    XtSetValues(toplevel, args, n);
+    XtSetValues(g_toplevel_widget, args, n);
 
     // add expose event handler
-    XtAddCallback(clockFace,
+    XtAddCallback(g_clock_face_widget,
                   (String)XmNexposeCallback,
                   (XtCallbackProc)Update,
                   (XtPointer)NULL);
-}
-
-void InitDigits(void)
-{
-
-    // set up the encoding for the digits
-    // see izzy.h for explanation
-    digitEncode[0] = 0x77;
-    digitEncode[1] = 0x12;
-    digitEncode[2] = 0x5d;
-    digitEncode[3] = 0x5b;
-    digitEncode[4] = 0x3a;
-    digitEncode[5] = 0x6b;
-    digitEncode[6] = 0x6f;
-    digitEncode[7] = 0x52;
-    digitEncode[8] = 0x7f;
-    digitEncode[9] = 0x7b;
-
-    // set up the segment direction variable
-    // h=horizontal v=vertical
-    segmentDir[0] = 'h';
-    segmentDir[1] = 'v';
-    segmentDir[2] = 'v';
-    segmentDir[3] = 'h';
-    segmentDir[4] = 'v';
-    segmentDir[5] = 'v';
-    segmentDir[6] = 'h';
-
-    // set up the origin of each segment
-    segmentOrg[0].x = 0;
-    segmentOrg[0].y = 0;
-    segmentOrg[1].x = 0;
-    segmentOrg[1].y = 0;
-    segmentOrg[2].x = 1 * SEG_LENGTH;
-    segmentOrg[2].y = 0;
-    segmentOrg[3].x = 0;
-    segmentOrg[3].y = 1 * SEG_LENGTH;
-    segmentOrg[4].x = 0;
-    segmentOrg[4].y = 1 * SEG_LENGTH;
-    segmentOrg[5].x = 1 * SEG_LENGTH;
-    segmentOrg[5].y = 1 * SEG_LENGTH;
-    segmentOrg[6].x = 0;
-    segmentOrg[6].y = 2 * SEG_LENGTH;
-
-    // set up the origin of each digit
-    digit[0].origin.x = 3 * SEG_WIDTH;
-    digit[1].origin.x = 6 * SEG_WIDTH + SEG_LENGTH;
-    digit[2].origin.x = 10 * SEG_WIDTH + 2 * SEG_LENGTH;
-    digit[3].origin.x = 14 * SEG_WIDTH + 3 * SEG_LENGTH;
-    digit[0].origin.y = 2 * SEG_WIDTH;
-    digit[1].origin.y = 2 * SEG_WIDTH;
-    digit[2].origin.y = 2 * SEG_WIDTH;
-    digit[3].origin.y = 2 * SEG_WIDTH;
 }
 
 void InitGC(void)
@@ -211,10 +219,10 @@ void InitGC(void)
     n++;
     XtSetArg(args[n], XtNbackground, &values.background);
     n++;
-    XtGetValues(clockFace, args, n);
-    drawGC = XCreateGC(XtDisplay(clockFace), XtWindow(clockFace),
-                       GCForeground | GCBackground,
-                       &values);
+    XtGetValues(g_clock_face_widget, args, n);
+    g_draw_GC = XCreateGC(XtDisplay(g_clock_face_widget), XtWindow(g_clock_face_widget),
+                          GCForeground | GCBackground,
+                          &values);
 
     // create erasing GC
     n = 0;
@@ -222,10 +230,10 @@ void InitGC(void)
     n++;
     XtSetArg(args[n], XtNforeground, &values.background);
     n++;
-    XtGetValues(clockFace, args, n);
-    eraseGC = XCreateGC(XtDisplay(clockFace), XtWindow(clockFace),
-                        GCForeground | GCBackground,
-                        &values);
+    XtGetValues(g_clock_face_widget, args, n);
+    g_erase_GC = XCreateGC(XtDisplay(g_clock_face_widget), XtWindow(g_clock_face_widget),
+                           GCForeground | GCBackground,
+                           &values);
 }
 
 // this routine gets the current time, prints it out, and
@@ -248,19 +256,19 @@ void PrintTime(char *timeBuf, int reverse)
     char foo[2];
     int i;
 
-    GC fg = reverse ? eraseGC : drawGC;
-    GC bg = reverse ? drawGC : eraseGC;
+    GC fg = reverse ? g_erase_GC : g_draw_GC;
+    GC bg = reverse ? g_draw_GC : g_erase_GC;
 
     // the clock area
-    XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
+    XFillRectangle(XtDisplay(g_clock_face_widget), XtWindow(g_clock_face_widget),
                    bg, 0, 0, CLOCK_WIDTH, CLOCK_HEIGHT);
     // draw the two little dots
-    XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
+    XFillRectangle(XtDisplay(g_clock_face_widget), XtWindow(g_clock_face_widget),
                    fg,
                    2 * SEG_LENGTH + 15 * SEG_WIDTH / 2,
                    SEG_LENGTH,
                    SEG_WIDTH, SEG_WIDTH);
-    XFillRectangle(XtDisplay(clockFace), XtWindow(clockFace),
+    XFillRectangle(XtDisplay(g_clock_face_widget), XtWindow(g_clock_face_widget),
                    fg,
                    2 * SEG_LENGTH + 15 * SEG_WIDTH / 2,
                    3 * SEG_WIDTH + SEG_LENGTH,
@@ -271,8 +279,8 @@ void PrintTime(char *timeBuf, int reverse)
     {
         foo[0] = timeBuf[i];
         foo[1] = '\0';
-        digit[i].value = digitEncode[atoi(foo)];
-        DrawDigit(digit[i], fg);
+        g_digit[i].value = g_digit_encode[atoi(foo)];
+        DrawDigit(g_digit[i], fg);
     }
 }
 
@@ -306,11 +314,11 @@ void DrawSegment(XPoint origin, int segNum, GC fg)
 {
     XPoint base, points[7];
 
-    base.x = origin.x + segmentOrg[segNum].x;
-    base.y = origin.y + segmentOrg[segNum].y;
+    base.x = origin.x + g_segment_origin[segNum].x;
+    base.y = origin.y + g_segment_origin[segNum].y;
 
     // define the segment via the array points
-    switch (segmentDir[segNum])
+    switch (g_segment_direction[segNum])
     {
     case 'h':
         points[0].x = base.x;
@@ -347,12 +355,12 @@ void DrawSegment(XPoint origin, int segNum, GC fg)
     }
 
     // fill the segment
-    XDrawLines(XtDisplay(clockFace),
-               XtWindow(clockFace),
+    XDrawLines(XtDisplay(g_clock_face_widget),
+               XtWindow(g_clock_face_widget),
                fg,
                points, 7, CoordModeOrigin);
-    XFillPolygon(XtDisplay(clockFace),
-                 XtWindow(clockFace),
+    XFillPolygon(XtDisplay(g_clock_face_widget),
+                 XtWindow(g_clock_face_widget),
                  fg,
                  points, 7, Convex, CoordModeOrigin);
 }
@@ -373,13 +381,13 @@ time_t UpdateTime(int reverse)
     {
         // write to the date area.
         sprintf(dateBuf, "Izzy, by Roger Allen");
-        xs_wprintf(dateArea, "%s", dateBuf);
+        xs_wprintf(g_date_area_widget, "%s", dateBuf);
     }
     else
     {
         // get the date into dateBuf, and write it to the date area.
         strftime(dateBuf, (int)DATE_LEN, "%A, %B %d", localtime(&tloc));
-        xs_wprintf(dateArea, "%s", dateBuf);
+        xs_wprintf(g_date_area_widget, "%s", dateBuf);
     }
     // get the time into timeBuf, and write it to the time area.
     strftime(timeBuf, (int)DATE_LEN, "%I%M", localtime(&tloc));
@@ -408,7 +416,7 @@ int main(int argc, char *argv[])
             break;
         case 'h':
         case '?':
-            printf("Look at Izzy's man page for usage info.\n");
+            printf("Usage suggestion:\n  izzy -fg red -bg black &\n");
             exit(0);
             break;
         }
@@ -416,14 +424,14 @@ int main(int argc, char *argv[])
         av++;
     }
 
-    toplevel = XtInitialize(argv[0], "Izzy", NULL, 0, &argc, argv);
+    g_toplevel_widget = XtInitialize(argv[0], "Izzy", NULL, 0, &argc, argv);
 
     XtAddActions(newActions, XtNumber(newActions));
 
     InitWidgets();
     // add the timeout with an initial delay
     XtAddTimeOut(500, (XtTimerCallbackProc)DoTime, (XtPointer)NULL);
-    XtRealizeWidget(toplevel);
+    XtRealizeWidget(g_toplevel_widget);
     InitGC();
 
     // loop forever

@@ -5,7 +5,7 @@ CFLAGS = -std=c17 -pedantic -Wall -Wextra $(OPT) -I/usr/include/X11/motif
 LFLAGS = -L/usr/lib/X11/lib
 LIBS = -lXm -lXt -lX11
 
-izzy : izzy.c izzy.h
+izzy : izzy.c
 	$(CC) $(CFLAGS) $(LFLAGS) izzy.c -o izzy $(LIBS)
 
 clean :
