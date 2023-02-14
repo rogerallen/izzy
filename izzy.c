@@ -65,13 +65,13 @@ const int BUTTON_WIDTH = 55;
 void xs_wprintf(Widget w, char *format, ...);
 void InitWidgets(void);
 void InitGC(void);
-void DoTime(XtPointer d, XtIntervalId *id);
-void PrintTime(char *timeBuf, int reverse);
 void IMouseUp(Widget w, XEvent *event, String *params, Cardinal *num_params);
 void IMouseDown(Widget w, XEvent *event, String *params, Cardinal *num_params);
+void TimeCallback(XtPointer d, XtIntervalId *id);
+void DrawTime(char *timeBuf, int reverse);
 void DrawDigit(digitType digit, GC fg);
 void DrawSegment(XPoint origin, int segNum, GC fg);
-void Update(void);
+void UpdateOnExpose(void);
 time_t UpdateTime(int write_date);
 
 // ----------------------------------------------------------------------
@@ -87,6 +87,7 @@ time_t UpdateTime(int write_date);
 //  4   5
 //  |   |
 //   -6-
+//
 // segment direction from its origin
 char g_segment_direction[7] = {'h', 'v', 'v', 'h', 'v', 'v', 'h'};
 // x,y coord of segment's origin
@@ -125,12 +126,14 @@ digitType g_digit[4] = {
      .value = 0},
     {.origin = {.x = 14 * SEG_WIDTH + 3 * SEG_LENGTH, .y = 2 * SEG_WIDTH},
      .value = 0}};
+
 Widget g_toplevel_widget, // widgets used in the izzy main screen
     g_background_widget,  // form widget background
     g_clock_face_widget,  // where digits are printed
     g_date_area_widget;   // where date is printed
 GC g_draw_GC, g_erase_GC;
 
+// ----------------------------------------------------------------------
 void xs_wprintf(Widget w, char *format, ...)
 {
     va_list args;
@@ -145,6 +148,7 @@ void xs_wprintf(Widget w, char *format, ...)
     va_end(args);
 }
 
+// ----------------------------------------------------------------------
 void InitWidgets(void)
 {
     Arg args[32];
@@ -215,9 +219,10 @@ void InitWidgets(void)
 
     // add expose event handler
     XtAddCallback(g_clock_face_widget, (String)XmNexposeCallback,
-                  (XtCallbackProc)Update, (XtPointer)NULL);
+                  (XtCallbackProc)UpdateOnExpose, (XtPointer)NULL);
 }
 
+// ----------------------------------------------------------------------
 void InitGC(void)
 {
     XGCValues values;
@@ -247,9 +252,28 @@ void InitGC(void)
                   GCForeground | GCBackground, &values);
 }
 
+// ----------------------------------------------------------------------
+// callback from mouse up
+void IMouseUp(Widget w, XEvent *event, String *params, Cardinal *num_params)
+{
+    (void)w, (void)event, (void)params,
+        (void)num_params; // fix Wunused-parameter
+    UpdateTime(FALSE);
+}
+
+// ----------------------------------------------------------------------
+// callback from mouse down
+void IMouseDown(Widget w, XEvent *event, String *params, Cardinal *num_params)
+{
+    (void)w, (void)event, (void)params,
+        (void)num_params; // fix Wunused-parameter
+    UpdateTime(TRUE);
+}
+
+// ----------------------------------------------------------------------
 // this routine gets the current time, prints it out, and
 // installs itself as a timeout routine when the next minute will occur.
-void DoTime(XtPointer d, XtIntervalId *id)
+void TimeCallback(XtPointer d, XtIntervalId *id)
 {
     (void)d, (void)id; // fix unused warning
 
@@ -259,10 +283,12 @@ void DoTime(XtPointer d, XtIntervalId *id)
 
     // set up interrupt for the next time
     next_minute = (60 - tloc % 60) * 1000;
-    XtAddTimeOut(next_minute, (XtTimerCallbackProc)DoTime, (XtPointer)NULL);
+    XtAddTimeOut(next_minute, (XtTimerCallbackProc)TimeCallback,
+                 (XtPointer)NULL);
 }
 
-void PrintTime(char *timeBuf, int reverse)
+// ----------------------------------------------------------------------
+void DrawTime(char *timeBuf, int reverse)
 {
     char foo[2];
     int i;
@@ -292,22 +318,7 @@ void PrintTime(char *timeBuf, int reverse)
     }
 }
 
-// callback from mouse up
-void IMouseUp(Widget w, XEvent *event, String *params, Cardinal *num_params)
-{
-    (void)w, (void)event, (void)params,
-        (void)num_params; // fix Wunused-parameter
-    UpdateTime(FALSE);
-}
-
-// callback from mouse down
-void IMouseDown(Widget w, XEvent *event, String *params, Cardinal *num_params)
-{
-    (void)w, (void)event, (void)params,
-        (void)num_params; // fix Wunused-parameter
-    UpdateTime(TRUE);
-}
-
+// ----------------------------------------------------------------------
 void DrawDigit(digitType digit, GC fg)
 {
     int i;
@@ -320,6 +331,7 @@ void DrawDigit(digitType digit, GC fg)
     }
 }
 
+// ----------------------------------------------------------------------
 void DrawSegment(XPoint origin, int segNum, GC fg)
 {
     XPoint base, points[7];
@@ -370,8 +382,10 @@ void DrawSegment(XPoint origin, int segNum, GC fg)
                  fg, points, 7, Convex, CoordModeOrigin);
 }
 
-void Update(void) { UpdateTime(FALSE); }
+// ----------------------------------------------------------------------
+void UpdateOnExpose(void) { UpdateTime(FALSE); }
 
+// ----------------------------------------------------------------------
 time_t UpdateTime(int reverse)
 {
     time_t tloc;
@@ -391,11 +405,12 @@ time_t UpdateTime(int reverse)
     }
     // get the time into timeBuf, and write it to the time area.
     strftime(timeBuf, (int)DATE_LEN, "%I%M", localtime(&tloc));
-    PrintTime(timeBuf, reverse);
+    DrawTime(timeBuf, reverse);
 
     return tloc;
 }
 
+// ----------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
     int ac;
@@ -428,7 +443,7 @@ int main(int argc, char *argv[])
 
     InitWidgets();
     // add the timeout with an initial delay
-    XtAddTimeOut(500, (XtTimerCallbackProc)DoTime, (XtPointer)NULL);
+    XtAddTimeOut(500, (XtTimerCallbackProc)TimeCallback, (XtPointer)NULL);
     XtRealizeWidget(g_toplevel_widget);
     InitGC();
 
